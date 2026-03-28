@@ -68,11 +68,20 @@ PY
 
 ---
 
-## 4. Запуск (целевой сценарий)
+## 4. Режимы запуска: разделение по целям
 
-Ниже пример для будущих скриптов (`src/train.py`, `src/infer.py`) после переноса baseline из ноутбука.
+Ниже — **два разных режима**, которые важно не смешивать:
 
-## 4.1 Обучение детектора
+1. **Debug/local CPU** — для локальной отладки пайплайна и проверки корректности.
+2. **Целевой скоростной режим для финальной оценки** — запуск на GPU для финальных метрик качества/latency.
+
+---
+
+## 4.1 Целевой скоростной режим для финальной оценки (GPU)
+
+Используйте этот режим для отчетных метрик и финальной валидации.
+
+### Обучение детектора (GPU)
 
 ```bash
 python -m src.train \
@@ -89,7 +98,7 @@ python -m src.train \
 - `artifacts/run_001/config.yaml`
 - `artifacts/run_001/latency.json`
 
-## 4.2 Инференс
+### Инференс (GPU)
 
 ```bash
 python -m src.infer \
@@ -98,6 +107,51 @@ python -m src.infer \
   --input-file input.jsonl \
   --output-file output.jsonl
 ```
+
+---
+
+## 4.2 CPU-only режим (без GPU)
+
+Используйте этот режим для локальной отладки, когда GPU недоступен.
+
+### Обучение детектора (CPU-only)
+
+```bash
+CUDA_VISIBLE_DEVICES="" python -m src.train \
+  --data-path knowledge_bench_public.csv \
+  --model-dir "$HOME/models/GigaChat3-10B-A1.8B-bf16" \
+  --output-dir artifacts/run_cpu_debug \
+  --probe-layers 0 10 20 \
+  --seed 42
+```
+
+### Инференс (CPU-only)
+
+```bash
+CUDA_VISIBLE_DEVICES="" python -m src.infer \
+  --model-dir "$HOME/models/GigaChat3-10B-A1.8B-bf16" \
+  --detector-path artifacts/run_cpu_debug/model.pkl \
+  --input-file input.jsonl \
+  --output-file output_cpu_debug.jsonl
+```
+
+### Ожидаемые компромиссы в CPU-only
+
+- заметно дольше время инференса;
+- заметно дольше время обучения;
+- ниже throughput (меньше запросов/сек);
+- результаты удобны для проверки пайплайна, но не для финального speed-бенчмарка.
+
+### Рекомендуемые упрощения для CPU
+
+- уменьшить число `probe_layers` (например, `0 10 20` вместо `0 5 10 15 20 25`);
+- использовать меньший сэмпл данных для debug-прогонов;
+- отключить тяжелые фичи/экстракции, которые не критичны для проверки корректности;
+- уменьшить batch size и объем логирования/профилирования.
+
+> Важно: CPU-only режим = **debug/local**. Для финальной оценки качества/скорости используйте только GPU-режим выше.
+
+---
 
 Формат `input.jsonl` (пример строки):
 
