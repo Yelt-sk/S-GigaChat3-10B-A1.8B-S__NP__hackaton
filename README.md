@@ -157,6 +157,13 @@
 1. Зафиксировать окружение (Python + зависимости).
 2. Вынести baseline из ноутбука в `src/`-скрипты.
 3. Реализовать extraction + train + eval CLI-команды.
+   Пример запуска обучения:
+
+   ```bash
+   python -m src.train --data-path knowledge_bench_public.csv
+   ```
+
+   По умолчанию `--data-path` также равен `knowledge_bench_public.csv`.
 4. Получить первую baseline-метрику PR-AUC и latency.
 5. Запустить абляции фичей и улучшать trade-off «качество/скорость».
 

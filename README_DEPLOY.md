@@ -50,6 +50,7 @@ pip install torch transformers scikit-learn numpy scipy tqdm pyyaml
 
 1. Что файл данных доступен:
    - `knowledge_bench_public.csv`
+   - Это же значение используется как `--data-path` по умолчанию в `src/train.py`.
 2. Что модель существует локально, например:
    - `$HOME/models/GigaChat3-10B-A1.8B-bf16`
 3. Что хватает VRAM для выбранного batch size.
@@ -82,6 +83,8 @@ python -m src.train \
   --probe-layers 0 5 10 15 20 25 \
   --seed 42
 ```
+
+Если файл не найден, скрипт завершится ранней и понятной ошибкой `FileNotFoundError` с подсказкой передать корректный `--data-path`.
 
 Ожидаемые артефакты:
 - `artifacts/run_001/model.pkl`
